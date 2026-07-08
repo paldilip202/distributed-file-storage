@@ -1,0 +1,18 @@
+syntax = "proto3";
+package storage;
+
+service StorageNode {
+  rpc WriteChunk  (WriteChunkRequest)  returns (WriteChunkResponse);
+  rpc ReadChunk   (ReadChunkRequest)   returns (ReadChunkResponse);
+  rpc DeleteChunk (DeleteChunkRequest) returns (DeleteChunkResponse);
+  rpc Ping        (PingRequest)        returns (PingResponse);
+}
+
+message WriteChunkRequest  { string chunk_id = 1; bytes data = 2; }
+message WriteChunkResponse { bool success = 1; string checksum = 2; string error = 3; }
+message ReadChunkRequest   { string chunk_id = 1; }
+message ReadChunkResponse  { bool success = 1; bytes data = 2; string checksum = 3; string error = 4; }
+message DeleteChunkRequest { string chunk_id = 1; }
+message DeleteChunkResponse{ bool success = 1; string error = 2; }
+message PingRequest  {}
+message PingResponse { bool alive = 1; int64 used_bytes = 2; }

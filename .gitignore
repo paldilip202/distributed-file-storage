@@ -1,0 +1,11 @@
+node_modules/
+.env
+logs/
+*.log
+storage/
+storage2/
+storage3/
+dist/
+.DS_Store
+postgres_data/
+redis_data/

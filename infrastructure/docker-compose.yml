@@ -1,0 +1,177 @@
+services:
+  postgres:
+    image: postgres:15
+    container_name: dfs-postgres
+    environment:
+      POSTGRES_DB: dfs_metadata
+      POSTGRES_USER: dfs_user
+      POSTGRES_PASSWORD: dfs_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dfs_user -d dfs_metadata"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - dfs-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: dfs-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - dfs-network
+
+  auth-service:
+    build:
+      context: ../services/auth-service
+      dockerfile: Dockerfile
+    container_name: dfs-auth
+    environment:
+      PORT: 4002
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: dfs_metadata
+      DB_USER: dfs_user
+      DB_PASSWORD: dfs_password
+      JWT_SECRET: supersecretchangeme123
+      JWT_EXPIRES_IN: 7d
+    ports:
+      - "4002:4002"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - dfs-network
+
+  metadata-service:
+    build:
+      context: ../services/metadata-service
+      dockerfile: Dockerfile
+    container_name: dfs-metadata
+    environment:
+      PORT: 4001
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: dfs_metadata
+      DB_USER: dfs_user
+      DB_PASSWORD: dfs_password
+      CHUNK_SIZE_BYTES: 67108864
+      REPLICATION_FACTOR: 3
+    ports:
+      - "4001:4001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:4001/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    networks:
+      - dfs-network
+
+  api-gateway:
+    build:
+      context: ../services/api-gateway
+      dockerfile: Dockerfile
+    container_name: dfs-gateway
+    environment:
+      PORT: 3000
+      AUTH_SERVICE_URL: http://auth-service:4002
+      METADATA_SERVICE_URL: http://metadata-service:4001
+    ports:
+      - "3000:3000"
+    depends_on:
+      auth-service:
+        condition: service_started
+      metadata-service:
+        condition: service_healthy
+    networks:
+      - dfs-network
+
+  storage-node-1:
+    build:
+      context: ../services/storage-node
+      dockerfile: Dockerfile
+    container_name: dfs-storage-1
+    environment:
+      NODE_HOST: storage-node-1
+      NODE_PORT: 5001
+      GRPC_PORT: 6001
+      CAPACITY_BYTES: 10737418240
+      METADATA_SERVICE_URL: http://metadata-service:4001
+      STORAGE_DIR: /data/chunks
+    ports:
+      - "6001:6001"
+    volumes:
+      - storage1_data:/data/chunks
+    depends_on:
+      metadata-service:
+        condition: service_healthy
+    networks:
+      - dfs-network
+
+  storage-node-2:
+    build:
+      context: ../services/storage-node
+      dockerfile: Dockerfile
+    container_name: dfs-storage-2
+    environment:
+      NODE_HOST: storage-node-2
+      NODE_PORT: 5002
+      GRPC_PORT: 6002
+      CAPACITY_BYTES: 10737418240
+      METADATA_SERVICE_URL: http://metadata-service:4001
+      STORAGE_DIR: /data/chunks
+    ports:
+      - "6002:6002"
+    volumes:
+      - storage2_data:/data/chunks
+    depends_on:
+      metadata-service:
+        condition: service_healthy
+    networks:
+      - dfs-network
+
+  storage-node-3:
+    build:
+      context: ../services/storage-node
+      dockerfile: Dockerfile
+    container_name: dfs-storage-3
+    environment:
+      NODE_HOST: storage-node-3
+      NODE_PORT: 5003
+      GRPC_PORT: 6003
+      CAPACITY_BYTES: 10737418240
+      METADATA_SERVICE_URL: http://metadata-service:4001
+      STORAGE_DIR: /data/chunks
+    ports:
+      - "6003:6003"
+    volumes:
+      - storage3_data:/data/chunks
+    depends_on:
+      metadata-service:
+        condition: service_healthy
+    networks:
+      - dfs-network
+
+volumes:
+  postgres_data:
+  redis_data:
+  storage1_data:
+  storage2_data:
+  storage3_data:
+
+networks:
+  dfs-network:
+    driver: bridge
+    name: dfs-network

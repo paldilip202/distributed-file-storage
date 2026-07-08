@@ -1,0 +1,118 @@
+.nodes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.node-card {
+  background: white;
+  border-radius: var(--radius);
+  padding: 20px;
+  border: 1px solid var(--border);
+  box-shadow: var(--card-shadow);
+  border-top: 4px solid #e2e8f0;
+}
+
+.node-card.active  { border-top-color: var(--success); }
+.node-card.dead    { border-top-color: var(--danger); }
+.node-card.degraded{ border-top-color: var(--warning); }
+
+.node-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 16px;
+}
+
+.node-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.node-address {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+
+.node-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.node-stat {
+  background: #f8fafc;
+  border-radius: 6px;
+  padding: 10px;
+}
+
+.node-stat-label {
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.node-stat-value {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+/* Storage bar */
+.storage-bar-wrap {
+  margin-top: 16px;
+}
+
+.storage-bar-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+}
+
+.storage-bar-bg {
+  background: #e2e8f0;
+  border-radius: 999px;
+  height: 6px;
+}
+
+.storage-bar-fill {
+  background: var(--primary);
+  height: 6px;
+  border-radius: 999px;
+  transition: width 0.3s;
+}
+
+.storage-bar-fill.warning { background: var(--warning); }
+.storage-bar-fill.danger  { background: var(--danger); }
+
+.heartbeat-time {
+  margin-top: 12px;
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+/* Refresh button */
+.cluster-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.btn-refresh {
+  background: #f1f5f9;
+  color: var(--text-secondary);
+  padding: 8px 16px;
+  font-size: 13px;
+  border-radius: var(--radius);
+}
+
+.btn-refresh:hover { background: #e2e8f0; }
